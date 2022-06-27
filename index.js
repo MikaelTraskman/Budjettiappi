@@ -1,15 +1,12 @@
 let sivu = document.getElementById("sivu");
 
-const paiv_valikko = document.getElementById("paiv-valikko");
 const tulot_valikko = document.getElementById("tulot-valikko");
 const menot_valikko = document.getElementById("menot-valikko");
 const varat_valikko = document.getElementById("varat-valikko");
-const asetukset_valikko = document.getElementById("asetukset-valikko");
+// const asetukset_valikko = document.getElementById("asetukset-valikko");
 let varat;
 
 // Asetukset
-let aikajakso_alku;
-let aikajakso_loppu;
 let aloitus_maara;
 let varallisuus;
 let pv_budjetti;
@@ -49,98 +46,23 @@ let tapahtumat;
 let tulokset;
 let tmVarat;
 
-paiv_valikko.innerHTML =
-  localStorage.getItem("PvKulut_yhteensa") === null
-    ? `<b>Päiväkulut</b><br><font color="e49a05">${0} €</font>`
-    : `<b>Päiväkulut</b><br><font color="e49a05">${
-        JSON.parse(localStorage.getItem("PvKulut_yhteensa"))[0].tulos
-      } €</font>`;
-tulot_valikko.innerHTML =
+let t_v =
   localStorage.getItem("Tulot_yhteensa") === null
-    ? `<b>Tulot</b><br><font color="e49a05">${0} €</font>`
-    : `<b>Tulot</b><br><font color="e49a05">${
-        JSON.parse(localStorage.getItem("Tulot_yhteensa"))[0].tulos
-      } €</font>`;
-menot_valikko.innerHTML =
+    ? 0.0
+    : JSON.parse(localStorage.getItem("Tulot_yhteensa"))[0].tulos;
+let m_v =
   localStorage.getItem("Menot_yhteensa") === null
-    ? `<b>Menot</b><br><font color="e49a05">${0} €</font>`
-    : `<b>Menot</b><br><font color="e49a05">${
-        JSON.parse(localStorage.getItem("Menot_yhteensa"))[0].tulos
-      } €</font>`;
-varat_valikko.innerHTML =
-  localStorage.getItem("Varat_yhteensa") === null
-    ? `<b>Varat</b><br><font color="e49a05">${0} €</font>`
-    : `<b>Varat</b><br><font color="e49a05">${(
-        JSON.parse(localStorage.getItem("Tulot_yhteensa"))[0].tulos -
-        JSON.parse(localStorage.getItem("Menot_yhteensa"))[0].tulos -
-        JSON.parse(localStorage.getItem("PvKulut_yhteensa"))[0].tulos
-      ).toFixed(2)} €</font>`;
-
-paiv_valikko.onclick = function paivSivu() {
-  paiv_valikko.className = "active";
-  tulot_valikko.className = "";
-  menot_valikko.className = "";
-  varat_valikko.className = "";
-  asetukset_valikko.className = "";
-
-  sivu.innerHTML = `
-  <h1>Päiväkulut</h1>
-            <div>
-                <p>
-                <h3 id="paiva">13.01.2022</h2>
-                </p>
-                <form id="pv_lomake">
-                    <div>
-                     <table>
-                            <tr>
-                                <td>Nimi:</td>
-                                <td>Hinta:</td>
-                            </tr>
-                            <tr>
-                                <td><input type="text" id="kulut-nimi-pv" placeholder="Kulun nimi..." /></td>
-                                <td><input type="number" id="kulut-hinta-pv" placeholder="Hinta..." step="any"/></td>
-                            </tr> 
-                        <tr>
-                        <td>
-                        <input type="hidden" id="tunnus" value="paivittainen">
-                        <br>
-                        <button class="nappi" id='pv_npi'>Lisää</button>
- 
-                            <ul id="pv_lista" class="lista">
-                            </ul>
-                        </td> 
-                        <td>
-                            <h4>Kulut Yhteensä</h4> 
-                        <p id="yhteensa">0.00 €</p>
-                    </div>
-                </form>
-
-                    <div>
-                        <h4>Jäljellä</h4>
-                        <p id="jaljella-pv" class="jaljella pv">0.00 €</p>
-                    </div>
-        
-                    <div>
-                        <h4>Päiväbudjetti</h4>
-                        <p id="budjet-pv" class="budjet pv">0.00€</p>
-                    </div>
-                        </td>
-                    </tr>
-                    </table>
-                <hr>
-            </div> 
-  `;
-  var newScript = document.createElement("script");
-  newScript.src = "toiminto.js";
-  sivu.appendChild(newScript);
-};
+    ? 0.0
+    : JSON.parse(localStorage.getItem("Menot_yhteensa"))[0].tulos;
+varat = (t_v - m_v).toFixed(2);
+tulot_valikko.innerHTML = `<b>Tulot</b><br><font color="e49a05">${t_v} €</font>`;
+menot_valikko.innerHTML = `<b>Menot</b><br><font color="e49a05">${m_v} €</font>`;
+varat_valikko.innerHTML = `<b>Varat</b><br><font color="e49a05">${varat} €</font>`;
 
 tulot_valikko.onclick = function tulotSivu() {
-  paiv_valikko.className = "";
   tulot_valikko.className = "active";
   menot_valikko.className = "";
   varat_valikko.className = "";
-  asetukset_valikko.className = "";
 
   sivu.innerHTML = `
   <h1>Tulot</h1>
@@ -199,11 +121,9 @@ tulot_valikko.onclick = function tulotSivu() {
 };
 
 menot_valikko.onclick = function menotSivu() {
-  paiv_valikko.className = "";
   tulot_valikko.className = "";
   menot_valikko.className = "active";
   varat_valikko.className = "";
-  asetukset_valikko.className = "";
 
   sivu.innerHTML = `
     <h1>Menot</h1>
@@ -260,53 +180,17 @@ menot_valikko.onclick = function menotSivu() {
 };
 
 varat_valikko.onclick = function varatSivu() {
-  paiv_valikko.className = "";
   tulot_valikko.className = "";
   menot_valikko.className = "";
   varat_valikko.className = "active";
-  asetukset_valikko.className = "";
+  //   asetukset_valikko.className = "";
 
   sivu.innerHTML = `
-    <h1>Asetukset</h1>
+    <h1>Varat</h1>
         <div>
         <form id="varat_lomake">
-            <h3>Varat</h3>
             <p id="varat"></p>
             <input type="hidden" id="tunnus" value="varat">
-            <button class="nappi" id='varat_npi'>Käytä Varoja</button>
-            <hr>
-        </form>
-        </div>`;
-  var newScript = document.createElement("script");
-  newScript.src = "asetukset.js";
-  sivu.appendChild(newScript);
-};
-
-asetukset_valikko.onclick = function asetuksetSivu() {
-  paiv_valikko.className = "";
-  tulot_valikko.className = "";
-  menot_valikko.className = "";
-  varat_valikko.className = "";
-  asetukset_valikko.className = "active";
-  sivu.innerHTML = `
-    <h1>Asetukset</h1>
-        <div>
-        <form id="varallisuus_lomake">
-        <p id="testi"></p>
-            <h3>Aikajakso</h3>
-            <p id="aikajakso">
-            <input type="date" id="aikajakso-alku" placeholder="AlkuPvm."/> - <input type="date" id="aikajakso-loppu" placeholder="LoppuPvm."/>
-            </p>
-            <h3>Varallisuus</h3>
-            <p id="varallisuus"></p>
-            <input type="number" id="aloitus-maara" placeholder="Nykyinen varallisuus" step="any" />
-            <p>
-            <button class="nappi" id='asetukset-npi'>Tallenna</button>
-            <h3>Päiväbudjetti</h3>
-            <input type="text" id="pv-budjetti"> <abbr id="max"></abbr>
-            <p>
-            <input type="hidden" id="tunnus" value="asetukset">
-            <button class="nappi" id='pv_budj-npi'>Muuta</button>
             <hr>
         </form>
         </div>`;

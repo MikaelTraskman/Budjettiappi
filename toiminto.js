@@ -2,64 +2,37 @@ tunnus = document.getElementById("tunnus").value;
 
 // Haetaan kalenteritiedot
 
-paiva = tunnus == "paivittainen" ? document.getElementById("paiva") : "";
-tanaan = new Date();
+paiva = "";
+//tanaan = new Date();
 joskus = new Date();
 
 pvm = new Date();
 
-paiva_otsikko =
-  tunnus == "paivittainen"
-    ? tanaan.getDate() +
-      "." +
-      (tanaan.getMonth() + 1) +
-      "." +
-      tanaan.getFullYear()
-    : joskus.getDate() +
-      "." +
-      (joskus.getMonth() + 1) +
-      "." +
-      joskus.getFullYear();
-
 // napit
 nappi =
-  tunnus == "paivittainen"
-    ? document.getElementById("pv_npi")
-    : tunnus == "tulot"
+  tunnus == "tulot"
     ? document.getElementById("tulot_npi")
     : document.getElementById("menot_npi");
 
 // tiedot
 hinta =
-  tunnus == "paivittainen"
-    ? document.getElementById("kulut-hinta-pv")
-    : tunnus == "tulot"
+  tunnus == "tulot"
     ? document.getElementById("tulot-maara")
     : document.getElementById("menot-maara");
 nimi =
-  tunnus == "paivittainen"
-    ? document.getElementById("kulut-nimi-pv")
-    : tunnus == "tulot"
+  tunnus == "tulot"
     ? document.getElementById("tulot-nimi")
     : document.getElementById("menot-nimi");
 
 lista =
-  tunnus == "paivittainen"
-    ? document.getElementById("pv_lista")
-    : tunnus == "tulot"
+  tunnus == "tulot"
     ? document.getElementById("tulot_lista")
     : document.getElementById("menot_lista");
 
 yhteensa = document.getElementById("yhteensa");
 
-tauluTapahtumat =
-  tunnus == "paivittainen" ? "PvKulut" : tunnus == "tulot" ? "Tulot" : "Menot";
-tauluTulokset =
-  tunnus == "paivittainen"
-    ? "PvKulut_yhteensa"
-    : tunnus == "tulot"
-    ? "Tulot_yhteensa"
-    : "Menot_yhteensa";
+tauluTapahtumat = tunnus == "tulot" ? "Tulot" : "Menot";
+tauluTulokset = tunnus == "tulot" ? "Tulot_yhteensa" : "Menot_yhteensa";
 tauluVarat = "Varallisuus_yhteensa";
 
 tyomuistiTapahtumat = JSON.parse(localStorage.getItem(tauluTapahtumat));
@@ -72,9 +45,6 @@ tulokset =
   localStorage.getItem(tauluTulokset) !== null ? tyomuistiTulokset : [];
 tmVarat = localStorage.getItem(tauluVarat) !== null ? tyomuistiVarat : [];
 
-// Päivämäärä tulostetaan
-paiva.innerHTML = `${paiva_otsikko}`;
-
 // Add transaction
 function lisaaTapahtuma(e) {
   e.preventDefault();
@@ -84,25 +54,17 @@ function lisaaTapahtuma(e) {
       : tunnus == "menot"
       ? new Date(document.getElementById("menot-paiva").value)
       : "";
-  pvm = tunnus == "paivittainen" ? tanaan : joskus;
+  pvm = joskus;
 
-  const ilmo =
-    tunnus == "paivittainen"
-      ? "Lisää nimi sekä hinta"
-      : "Lisää nimi, hinta sekä päivämäärä";
+  const ilmo = "Lisää nimi, hinta sekä päivämäärä";
 
-  if (nimi.value.trim() === "" || hinta.value.trim() === "" || !pvm) {
+  if (
+    nimi.value.trim() === "" ||
+    hinta.value.trim() === "" ||
+    !Date.parse(pvm)
+  ) {
     alert(ilmo);
   } else {
-    // joskus =
-    //   tunnus == "tulot"
-    //     ? new Date(document.getElementById("tulot-paiva").value)
-    //     : tunnus == "menot"
-    //     ? new Date(document.getElementById("menot-paiva").value)
-    //     : "";
-
-    // pvm = tunnus == "paivittainen" ? tanaan : joskus;
-
     const toimi = {
       id: tuotaID(),
       nimi: nimi.value,
@@ -118,6 +80,8 @@ function lisaaTapahtuma(e) {
 
     paivitaTyomuisti();
 
+    paivitaValikko();
+
     hinta.value = "";
     nimi.value = "";
   }
@@ -132,22 +96,22 @@ function tuotaID() {
 
 // Tuota ID tuloksille
 function tuota_tulosID() {
-  const tulosID =
-    tunnus == "paivittainen"
-      ? "PvTulos"
-      : tunnus == "tulot"
-      ? "TulotTulos"
-      : "MenotTulos";
+  const tulosID = tunnus == "tulot" ? "TulotTulos" : "MenotTulos";
   return tulosID;
 }
 
 // Add tapahtumat to DOM lista
 function lisaaTapahtumaDOM(toimi) {
+  const tpvm = new Date(toimi.pvm);
+  const pvm_eur =
+    tpvm.getDate() + "." + (tpvm.getMonth() + 1) + "." + tpvm.getFullYear();
+
   const item = document.createElement("li");
 
   item.innerHTML = `
+    ${pvm_eur} <button class="delete-btn" onclick="poistaTapahtuma(${toimi.id})">x</button><br>
     ${toimi.nimi} 
-    ${toimi.hinta} € <button class="delete-btn" onclick="poistaTapahtuma(${toimi.id})">x</button>
+    ${toimi.hinta} €
   `;
 
   lista.appendChild(item);
@@ -169,17 +133,16 @@ function paivitaArvot() {
   };
 
   tulokset.push(kooste);
+
   paivitaTyomuistiTulokset();
 
   //Tulostetaan
   yhteensa.innerHTML = `${plussa} €`;
 
   paivitaValikko();
-  MuutaVarat();
 }
 
-function MuutaVarat(e) {
-  //e.preventDefault();
+function MuutaVarat(varat) {
   const varatID = "VaratTulos";
   poistaVarat(varatID);
   const muutos = {
@@ -191,43 +154,22 @@ function MuutaVarat(e) {
 }
 
 function paivitaValikko() {
-  // varat =
-  //   localStorage.getItem("Varallisuus_yhteensa") === null
-  //     ? 0
-  //     : (
-  //         JSON.parse(localStorage.getItem("Tulot_yhteensa"))[0].tulos -
-  //         JSON.parse(localStorage.getItem("Menot_yhteensa"))[0].tulos -
-  //         JSON.parse(localStorage.getItem("PvKulut_yhteensa"))[0].tulos
-  //       ).toFixed(2);
-  paiv_valikko.innerHTML =
-    localStorage.getItem("PvKulut_yhteensa") === null
-      ? `<b>Päiväkulut</b><br><font color="e49a05">${0} €</font>`
-      : `<b>Päiväkulut</b><br><font color="e49a05">${
-          JSON.parse(localStorage.getItem("PvKulut_yhteensa"))[0].tulos
-        } €</font>`;
-  tulot_valikko.innerHTML =
+  const t_v =
     localStorage.getItem("Tulot_yhteensa") === null
-      ? `<b>Tulot</b><br><font color="e49a05">${0} €</font>`
-      : `<b>Tulot</b><br><font color="e49a05">${
-          JSON.parse(localStorage.getItem("Tulot_yhteensa"))[0].tulos
-        } €</font>`;
-  menot_valikko.innerHTML =
+      ? (0).toFixed(2)
+      : JSON.parse(localStorage.getItem("Tulot_yhteensa"))[0].tulos;
+  const m_v =
     localStorage.getItem("Menot_yhteensa") === null
-      ? `<b>Menot</b><br><font color="e49a05">${0} €</font>`
-      : `<b>Menot</b><br><font color="e49a05">${
-          JSON.parse(localStorage.getItem("Menot_yhteensa"))[0].tulos
-        } €</font>`;
-  varat_valikko.innerHTML =
-    localStorage.getItem("Varat_yhteensa") === null
-      ? `<b>Varat</b><br><font color="e49a05">${0} €</font>`
-      : `<b>Varat</b><br><font color="e49a05">${(
-          JSON.parse(localStorage.getItem("Tulot_yhteensa"))[0].tulos -
-          JSON.parse(localStorage.getItem("Menot_yhteensa"))[0].tulos -
-          JSON.parse(localStorage.getItem("PvKulut_yhteensa"))[0].tulos
-        ).toFixed(2)} €</font>`;
+      ? (0).toFixed(2)
+      : JSON.parse(localStorage.getItem("Menot_yhteensa"))[0].tulos;
+  let varat = (t_v - m_v).toFixed(2);
+  tulot_valikko.innerHTML = `<b>Tulot</b><br><font color="e49a05">${t_v} €</font>`;
+  menot_valikko.innerHTML = `<b>Menot</b><br><font color="e49a05">${m_v} €</font>`;
+  varat_valikko.innerHTML = `<b>Varat</b><br><font color="e49a05">${varat} €</font>`;
+  MuutaVarat(varat);
 }
 
-// Remove transaction by ID
+// Poista tapahtuma id:llä
 function poistaTapahtuma(id) {
   tapahtumat = tapahtumat.filter((toimi) => toimi.id !== id);
 
@@ -247,7 +189,7 @@ function poistaVarat(varatID) {
   paivitaVarat();
 }
 
-// Update local storage tapahtumat
+// Päivitä työmuisti
 
 function paivitaTyomuisti() {
   localStorage.setItem(tauluTapahtumat, JSON.stringify(tapahtumat));
